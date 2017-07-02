@@ -1,5 +1,7 @@
 # DRange
 
+[![Build Status](https://travis-ci.org/jrobinsonc/drange.svg?branch=master)](https://travis-ci.org/jrobinsonc/drange)
+
 Discontinuous ranges.
 
 ```
