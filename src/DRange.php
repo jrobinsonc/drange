@@ -3,8 +3,8 @@ namespace jrdev;
 
 class DRange implements \Countable
 {
-    private $ranges;
-    private $length;
+    protected $ranges;
+    protected $length;
 
     public function __construct($rangeA = null, $rangeB = null)
     {
@@ -26,14 +26,14 @@ class DRange implements \Countable
         return $this->length;
     }
 
-    private function updateLength()
+    protected function updateLength()
     {
         $this->length = array_reduce($this->ranges, function ($previous, $range) {
             return $previous + $range->length;
         });
     }
 
-    private function addSubRange($subRange)
+    protected function addSubRange($subRange)
     {
         $newRanges = [];
         $num = 0;
@@ -80,7 +80,7 @@ class DRange implements \Countable
         return $this;
     }
 
-    private function subtractSubRange($subRange)
+    protected function subtractSubRange($subRange)
     {
         $newRanges = [];
         $num = 0;
