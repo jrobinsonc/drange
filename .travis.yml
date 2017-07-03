@@ -1,4 +1,5 @@
 language: php
+dist: trusty # hhvm only works on trusty
 
 php:
   - 5.4
