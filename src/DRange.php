@@ -65,7 +65,7 @@ class DRange implements \Countable
             foreach ($rangeA->ranges as $item) {
                 $this->addSubRange($item);
             }
-        } else if ($rangeA instanceof DRange\SubRange) {
+        } elseif ($rangeA instanceof DRange\SubRange) {
             $this->addSubRange($rangeA);
         } else {
             if ($rangeB === null) {
@@ -108,7 +108,7 @@ class DRange implements \Countable
             foreach ($rangeA->ranges as $item) {
                 $this->subtractSubRange($item);
             }
-        } else if ($rangeA instanceof DRange\SubRange) {
+        } elseif ($rangeA instanceof DRange\SubRange) {
             $this->subtractSubRange($rangeA);
         } else {
             if ($rangeB === null) {
