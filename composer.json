@@ -26,6 +26,7 @@
     "phpmd": "vendor/bin/phpmd tests/unit/,src/ text phpmd.xml",
     "phpcs": "vendor/bin/phpcs --standard=PSR2 tests/unit/ src/",
     "codecept": "vendor/bin/codecept run",
+    "coverage": "vendor/bin/codecept run --coverage --coverage-html",
     "test": [
       "@codecept",
       "@phpcs",

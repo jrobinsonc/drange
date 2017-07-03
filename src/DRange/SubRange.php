@@ -12,6 +12,10 @@ class SubRange
         $this->low = $low;
         $this->high = $high;
         $this->length = 1 + $this->high - $this->low;
+
+        if ($this->low > $this->high) {
+            throw new \UnexpectedValueException("This range is not acceptable: {$this->low} - {$this->high}");
+        }
     }
 
     public function __toString()
@@ -42,29 +46,25 @@ class SubRange
     {
         if ($this->touches($range)) {
             return new SubRange(min($this->low, $range->low), max($this->high, $range->high));
-        } else {
-            return null;
         }
     }
 
     public function subtract($range)
     {
-        if (!$this->overlaps($range)) {
-            return false;
-        }
+        if ($this->overlaps($range)) {
+            if ($range->low <= $this->low && $range->high >= $this->high) {
+                return [];
+            }
 
-        if ($range->low <= $this->low && $range->high >= $this->high) {
-            return [];
-        }
+            if ($range->low > $this->low && $range->high < $this->high) {
+                return [new SubRange($this->low, $range->low - 1), new SubRange($range->high + 1, $this->high)];
+            }
 
-        if ($range->low > $this->low && $range->high < $this->high) {
-            return [new SubRange($this->low, $range->low - 1), new SubRange($range->high + 1, $this->high)];
-        }
+            if ($range->low <= $this->low) {
+                return [new SubRange($range->high + 1, $this->high)];
+            }
 
-        if ($range->low <= $this->low) {
-            return [new SubRange($range->high + 1, $this->high)];
+            return [new SubRange($this->low, $range->low - 1)];
         }
-
-        return [new SubRange($this->low, $range->low - 1)];
     }
 }

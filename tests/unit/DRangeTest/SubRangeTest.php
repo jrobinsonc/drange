@@ -16,6 +16,14 @@ class SubRangeTest extends \Codeception\Test\Unit
     {
         $subRange = new SubRange(5, 7);
         $this->assertEquals('5-7', $subRange);
+
+        $exception = false;
+
+        try {
+            $subRange = new SubRange(7, 5);
+        } catch (\UnexpectedValueException $exception) {}
+
+        $this->assertInstanceOf(\UnexpectedValueException::class, $exception);
     }
 
     public function testClone()

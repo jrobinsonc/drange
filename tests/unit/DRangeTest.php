@@ -1,7 +1,7 @@
 <?php
 namespace jrdev;
 
-use \jrdev\DRange;
+use jrdev\DRange\SubRange;
 
 class DRangeTest extends \Codeception\Test\Unit
 {
@@ -46,7 +46,7 @@ class DRangeTest extends \Codeception\Test\Unit
             $this->assertEquals(21, count($drange));
         });
 
-        $this->specify('should allow adding another DRange', function () {
+        $this->specify('should allow adding instances of DRange', function () {
             $drange = new DRange(1, 5);
             $drange->add(15, 20);
 
@@ -57,6 +57,15 @@ class DRangeTest extends \Codeception\Test\Unit
             $this->assertEquals('[ 1-6, 15-30 ]', $drange);
 
             $this->assertEquals(22, count($drange));
+        });
+
+        $this->specify('should allow adding instances of DRange\SubRange', function () {
+            $drange = new DRange(1, 5);
+            $drange->add(3, 11);
+            $drange->add(new SubRange(2, 20));
+            $this->assertEquals('[ 1-20 ]', $drange);
+
+            $this->assertEquals(20, count($drange));
         });
     }
 
@@ -97,6 +106,16 @@ class DRangeTest extends \Codeception\Test\Unit
 
             $this->assertEquals(86, count($drange));
         });
+
+        $this->specify('should allow subtracting instances of DRange\SubRange', function () {
+            $drange = new DRange(15, 22);
+            $drange2 = new DRange\SubRange(6, 17);
+
+            $drange->subtract($drange2);
+            $this->assertEquals('[ 18-22 ]', $drange);
+
+            $this->assertEquals(5, count($drange));
+        });
     }
 
     public function testIndexSets()
@@ -109,6 +128,7 @@ class DRangeTest extends \Codeception\Test\Unit
             $this->assertEquals(5, $drange->index(5));
             $this->assertEquals(25, $drange->index(15));
             $this->assertEquals(45, $drange->index(25));
+            $this->assertNull($drange->index(55));
             $this->assertEquals(30, count($drange));
         });
     }

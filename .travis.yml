@@ -1,5 +1,4 @@
 language: php
-dist: trusty
 
 php:
   - 5.4
@@ -21,7 +20,7 @@ cache:
 
 before_script:
   - composer self-update
-  - composer update --prefer-dist
+  - composer update
 
 script:
   - composer test
