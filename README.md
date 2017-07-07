@@ -1,6 +1,7 @@
 # DRange
 
 [![Build Status](https://travis-ci.org/jrobinsonc/drange.svg?branch=master)](https://travis-ci.org/jrobinsonc/drange)
+[![Dependency Status](https://www.versioneye.com/user/projects/595b9c66368b0800412a1095/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/595b9c66368b0800412a1095)
 
 Discontinuous ranges.
 
