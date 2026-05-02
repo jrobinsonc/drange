@@ -42,10 +42,5 @@
     "psr-4": {
       "jrdev\\": "src/"
     }
-  },
-  "config": {
-    "platform": {
-      "php": "8.2"
-    }
   }
 }
