@@ -37,20 +37,21 @@ class DRange implements \Countable
     {
         $newRanges = [];
         $num = 0;
+        $rangesCount = count($this->ranges);
 
-        while ($num < count($this->ranges) && !$subRange->touches($this->ranges[$num])) {
+        while ($num < $rangesCount && !$subRange->touches($this->ranges[$num])) {
             $newRanges[] = clone($this->ranges[$num]);
             $num++;
         }
 
-        while ($num < count($this->ranges) && $subRange->touches($this->ranges[$num])) {
+        while ($num < $rangesCount && $subRange->touches($this->ranges[$num])) {
             $subRange = $subRange->add($this->ranges[$num]);
             $num++;
         }
 
         $newRanges[] = $subRange;
 
-        while ($num < count($this->ranges)) {
+        while ($num < $rangesCount) {
             $newRanges[] = clone($this->ranges[$num]);
             $num++;
         }
@@ -82,18 +83,19 @@ class DRange implements \Countable
     {
         $newRanges = [];
         $num = 0;
+        $rangesCount = count($this->ranges);
 
-        while ($num < count($this->ranges) && !$subRange->overlaps($this->ranges[$num])) {
+        while ($num < $rangesCount && !$subRange->overlaps($this->ranges[$num])) {
             $newRanges[] = clone($this->ranges[$num]);
             $num++;
         }
 
-        while ($num < count($this->ranges) && $subRange->overlaps($this->ranges[$num])) {
+        while ($num < $rangesCount && $subRange->overlaps($this->ranges[$num])) {
             $newRanges = array_merge($newRanges, $this->ranges[$num]->subtract($subRange));
             $num++;
         }
 
-        while ($num < count($this->ranges)) {
+        while ($num < $rangesCount) {
             $newRanges[] = clone($this->ranges[$num]);
             $num++;
         }
@@ -124,13 +126,14 @@ class DRange implements \Countable
     public function index($index)
     {
         $num = 0;
+        $rangesCount = count($this->ranges);
 
-        while ($num < count($this->ranges) && $this->ranges[$num]->length <= $index) {
+        while ($num < $rangesCount && $this->ranges[$num]->length <= $index) {
             $index -= $this->ranges[$num]->length;
             $num++;
         }
 
-        if ($num >= count($this->ranges)) {
+        if ($num >= $rangesCount) {
             return null;
         }
 

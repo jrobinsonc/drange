@@ -1,6 +1,8 @@
 <?php
 namespace jrdev\DRange;
 
+use UnexpectedValueException;
+
 class SubRange
 {
     public $low;
@@ -14,7 +16,7 @@ class SubRange
         $this->length = 1 + $this->high - $this->low;
 
         if ($this->low > $this->high) {
-            throw new \UnexpectedValueException("This range is not acceptable: {$this->low} - {$this->high}");
+            throw new UnexpectedValueException("This range is not acceptable: {$this->low} - {$this->high}");
         }
     }
 

@@ -5,8 +5,6 @@ use \jrdev\DRange\SubRange;
 
 class SubRangeTest extends \Codeception\Test\Unit
 {
-    use \Codeception\Specify;
-
     /**
      * @var \jrdev\UnitTester
      */
@@ -16,15 +14,12 @@ class SubRangeTest extends \Codeception\Test\Unit
     {
         $subRange = new SubRange(5, 7);
         $this->assertEquals('5-7', $subRange);
+    }
 
-        $exception = false;
-
-        try {
-            $subRange = new SubRange(7, 5);
-        } catch (\UnexpectedValueException $exception) {
-        }
-
-        $this->assertInstanceOf('UnexpectedValueException', $exception);
+    public function testInstanciateThrowsOnInvalidRange()
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        new SubRange(7, 5);
     }
 
     public function testClone()
