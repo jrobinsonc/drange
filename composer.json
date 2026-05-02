@@ -20,7 +20,8 @@
     "pdepend/pdepend": "^2.16",
     "squizlabs/php_codesniffer": "^4.0",
     "codeception/codeception": "^5.3",
-    "codeception/module-asserts": "^3.2"
+    "codeception/module-asserts": "^3.2",
+    "captainhook/captainhook": "^5.29"
   },
   "scripts": {
     "phpmd": "vendor/bin/phpmd tests/unit/,src/ text phpmd.xml",

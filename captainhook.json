@@ -1,0 +1,10 @@
+{
+  "pre-push": {
+    "enabled": true,
+    "actions": [
+      {
+        "action": "composer test"
+      }
+    ]
+  }
+}
