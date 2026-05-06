@@ -1,5 +1,6 @@
 # DRange
 
+[![Tests](https://github.com/jrobinsonc/drange/actions/workflows/tests.yml/badge.svg)](https://github.com/jrobinsonc/drange/actions/workflows/tests.yml)
 [![Latest Version](https://img.shields.io/packagist/v/jrdev/drange)](https://packagist.org/packages/jrdev/drange)
 [![PHP](https://img.shields.io/badge/php-%3E%3D8.2-8892bf)](https://www.php.net/)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/jrobinsonc/drange/blob/master/LICENSE)
