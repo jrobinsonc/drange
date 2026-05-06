@@ -140,4 +140,20 @@ class DRangeTest extends \Codeception\Test\Unit
         $this->assertEquals('[ 0-9 ]', $drange);
         $this->assertEquals('[ 0-4, 6-9 ]', $drange2);
     }
+
+    public function testEmptyDRange()
+    {
+        $drange = new DRange();
+        $this->assertEquals('[  ]', (string)$drange);
+        $this->assertEquals(0, count($drange));
+        $this->assertEquals(0, $drange->count());
+    }
+
+    public function testSubtractToEmpty()
+    {
+        $drange = new DRange(1, 10);
+        $drange->subtract(1, 10);
+        $this->assertEquals('[  ]', (string)$drange);
+        $this->assertEquals(0, count($drange));
+    }
 }

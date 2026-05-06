@@ -33,4 +33,24 @@ class SubRangeTest extends \Codeception\Test\Unit
         $this->assertEquals('5-9', $subRange);
         $this->assertEquals('1-10', $subRange2);
     }
+
+    public function testToStringSingleNumber()
+    {
+        $subRange = new SubRange(5, 5);
+        $this->assertEquals('5', (string)$subRange);
+    }
+
+    public function testAddDoesNotTouch()
+    {
+        $subRange1 = new SubRange(1, 5);
+        $subRange2 = new SubRange(7, 10);
+        $this->assertNull($subRange1->add($subRange2));
+    }
+
+    public function testSubtractDoesNotOverlap()
+    {
+        $subRange1 = new SubRange(1, 5);
+        $subRange2 = new SubRange(7, 10);
+        $this->assertNull($subRange1->subtract($subRange2));
+    }
 }
