@@ -20,7 +20,7 @@ DRange is a PHP library for managing **discontinuous (non-contiguous) ranges of 
 
 ## Requirements
 
-- PHP >= 5.4
+- PHP >= 8.2
 - Composer
 
 ## Installation
