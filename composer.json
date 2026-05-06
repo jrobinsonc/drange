@@ -1,8 +1,20 @@
 {
   "name": "jrdev/drange",
   "type": "library",
-  "description": "Discontinuous ranges",
-  "keywords": [],
+  "description": "Efficiently manage non-contiguous integer ranges with automatic merging and set operations",
+  "keywords": [
+    "range",
+    "ranges",
+    "discontinuous",
+    "non-contiguous",
+    "integer",
+    "merge",
+    "data-structure",
+    "set-operations",
+    "intersection",
+    "gaps",
+    "allocation"
+  ],
   "homepage": "https://github.com/jrobinsonc/drange/blob/master/README.md",
   "license": "MIT",
   "authors": [
