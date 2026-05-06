@@ -1,7 +1,7 @@
 # DRange
 
 [![Latest Version](https://img.shields.io/packagist/v/jrdev/drange)](https://packagist.org/packages/jrdev/drange)
-[![PHP](https://img.shields.io/badge/php-%3E%3D5.4-8892bf)](https://www.php.net/)
+[![PHP](https://img.shields.io/badge/php-%3E%3D8.2-8892bf)](https://www.php.net/)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/jrobinsonc/drange/blob/master/LICENSE)
 
 DRange is a PHP library for managing **discontinuous (non-contiguous) ranges of integers**. Rather than storing every number individually, it holds a compact, sorted list of contiguous sub-ranges — automatically merging adjacent ranges when you add numbers and splitting them when you subtract. The result is an expressive, memory-efficient structure for any problem that involves gaps in sequences.
