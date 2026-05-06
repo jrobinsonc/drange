@@ -140,4 +140,56 @@ class DRangeTest extends \Codeception\Test\Unit
         $this->assertEquals('[ 0-9 ]', $drange);
         $this->assertEquals('[ 0-4, 6-9 ]', $drange2);
     }
+
+    public function testIntersectSingleNumbers()
+    {
+        $drange1 = new DRange(1, 5);
+        $drange2 = new DRange(3, 7);
+
+        $result = $drange1->intersect($drange2);
+        $this->assertEquals('[ 3-5 ]', $result);
+        $this->assertEquals(3, count($result));
+    }
+
+    public function testIntersectRanges()
+    {
+        $drange1 = new DRange(1, 5);
+        $drange1->add(10, 15);
+
+        $drange2 = new DRange(3, 12);
+
+        $result = $drange1->intersect($drange2);
+        $this->assertEquals('[ 3-5, 10-12 ]', $result);
+        $this->assertEquals(6, count($result));
+    }
+
+    public function testIntersectDisjoint()
+    {
+        $drange1 = new DRange(1, 5);
+        $drange2 = new DRange(10, 15);
+
+        $result = $drange1->intersect($drange2);
+        $this->assertEquals('[  ]', strval($result));
+        $this->assertEquals(0, count($result));
+    }
+
+    public function testIntersectWithSubRange()
+    {
+        $drange = new DRange(1, 10);
+        $drange->add(20, 30);
+
+        $result = $drange->intersect(new SubRange(5, 25));
+        $this->assertEquals('[ 5-10, 20-25 ]', $result);
+        $this->assertEquals(12, count($result));
+    }
+
+    public function testIntersectWithSingleNumber()
+    {
+        $drange = new DRange(1, 5);
+        $drange->add(10, 15);
+
+        $result = $drange->intersect(3, 12);
+        $this->assertEquals('[ 3-5, 10-12 ]', $result);
+        $this->assertEquals(6, count($result));
+    }
 }
