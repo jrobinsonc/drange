@@ -1,7 +1,0 @@
-checks:
-  php: true
-
-filter:
-  paths: ['src/*']
-  excluded_paths:
-    - tests/*
