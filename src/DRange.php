@@ -21,7 +21,7 @@ class DRange implements \Countable
         return '[ ' . implode(', ', $this->ranges) . ' ]';
     }
 
-    public function count()
+    public function count(): int
     {
         return $this->length;
     }
