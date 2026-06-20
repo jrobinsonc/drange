@@ -155,6 +155,8 @@ class DRangeTest extends \Codeception\Test\Unit
         $drange->subtract(1, 10);
         $this->assertEquals('[  ]', (string)$drange);
         $this->assertEquals(0, count($drange));
+    }
+
     public function testIntersectSingleNumbers()
     {
         $drange1 = new DRange(1, 5);
