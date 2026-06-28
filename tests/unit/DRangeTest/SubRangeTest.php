@@ -70,4 +70,24 @@ class SubRangeTest extends \Codeception\Test\Unit
         $subRange2 = new SubRange(7, 10);
         $this->assertNull($subRange1->subtract($subRange2));
     }
+
+    public function testTouches()
+    {
+        $range1 = new SubRange(5, 10);
+
+        // Disjoint (does not touch)
+        $this->assertFalse($range1->touches(new SubRange(1, 3)));
+        $this->assertFalse($range1->touches(new SubRange(12, 15)));
+
+        // Adjacent (touches)
+        $this->assertTrue($range1->touches(new SubRange(1, 4)));
+        $this->assertTrue($range1->touches(new SubRange(11, 15)));
+
+        // Overlapping (touches)
+        $this->assertTrue($range1->touches(new SubRange(1, 6)));
+        $this->assertTrue($range1->touches(new SubRange(8, 12)));
+        $this->assertTrue($range1->touches(new SubRange(6, 8)));
+        $this->assertTrue($range1->touches(new SubRange(1, 15)));
+        $this->assertTrue($range1->touches(new SubRange(5, 10)));
+    }
 }
