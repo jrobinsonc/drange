@@ -207,5 +207,9 @@ class DRangeTest extends \Codeception\Test\Unit
         $result = $drange->intersect(3, 12);
         $this->assertEquals('[ 3-5, 10-12 ]', $result);
         $this->assertEquals(6, count($result));
+
+        $result2 = $drange->intersect(4);
+        $this->assertEquals('[ 4 ]', $result2);
+        $this->assertEquals(1, count($result2));
     }
 }
