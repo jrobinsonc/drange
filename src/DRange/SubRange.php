@@ -9,10 +9,10 @@ class SubRange
     public $high;
     public $length;
 
-    public function __construct($low, $high)
+    public function __construct(int $low, int $high)
     {
-        $this->low = (int)$low;
-        $this->high = (int)$high;
+        $this->low = $low;
+        $this->high = $high;
         $this->length = 1 + $this->high - $this->low;
 
         if ($this->low > $this->high) {
