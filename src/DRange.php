@@ -21,6 +21,13 @@ class DRange implements \Countable
         return '[ ' . implode(', ', $this->ranges) . ' ]';
     }
 
+    public function __clone(): void
+    {
+        foreach ($this->ranges as $key => $range) {
+            $this->ranges[$key] = clone $range;
+        }
+    }
+
     public function count(): int
     {
         return $this->length;
