@@ -40,6 +40,23 @@ class SubRangeTest extends \Codeception\Test\Unit
         $this->assertEquals('5', (string)$subRange);
     }
 
+    public function testAddTouches()
+    {
+        $subRange1 = new SubRange(1, 5);
+        $subRange2 = new SubRange(6, 10);
+
+        $added = $subRange1->add($subRange2);
+        $this->assertInstanceOf(SubRange::class, $added);
+        $this->assertEquals(1, $added->low);
+        $this->assertEquals(10, $added->high);
+
+        // Test commutative property (adding lower to higher)
+        $addedReverse = $subRange2->add($subRange1);
+        $this->assertInstanceOf(SubRange::class, $addedReverse);
+        $this->assertEquals(1, $addedReverse->low);
+        $this->assertEquals(10, $addedReverse->high);
+    }
+
     public function testAddDoesNotTouch()
     {
         $subRange1 = new SubRange(1, 5);
