@@ -21,7 +21,7 @@ class DRange implements \Countable
         return '[ ' . implode(', ', $this->ranges) . ' ]';
     }
 
-    public function count()
+    public function count(): int
     {
         return $this->length;
     }
@@ -30,7 +30,7 @@ class DRange implements \Countable
     {
         $this->length = array_reduce($this->ranges, function ($previous, $range) {
             return $previous + $range->length;
-        });
+        }, 0);
     }
 
     protected function addSubRange($subRange)
