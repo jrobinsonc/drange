@@ -21,6 +21,13 @@ class DRange implements \Countable
         return '[ ' . implode(', ', $this->ranges) . ' ]';
     }
 
+    public function __clone(): void
+    {
+        foreach ($this->ranges as $key => $range) {
+            $this->ranges[$key] = clone $range;
+        }
+    }
+
     public function count(): int
     {
         return $this->length;
@@ -40,7 +47,7 @@ class DRange implements \Countable
         $rangesCount = count($this->ranges);
 
         while ($num < $rangesCount && !$subRange->touches($this->ranges[$num])) {
-            $newRanges[] = clone($this->ranges[$num]);
+            $newRanges[] = $this->ranges[$num];
             $num++;
         }
 
@@ -52,7 +59,7 @@ class DRange implements \Countable
         $newRanges[] = $subRange;
 
         while ($num < $rangesCount) {
-            $newRanges[] = clone($this->ranges[$num]);
+            $newRanges[] = $this->ranges[$num];
             $num++;
         }
 
@@ -86,7 +93,7 @@ class DRange implements \Countable
         $rangesCount = count($this->ranges);
 
         while ($num < $rangesCount && !$subRange->overlaps($this->ranges[$num])) {
-            $newRanges[] = clone($this->ranges[$num]);
+            $newRanges[] = $this->ranges[$num];
             $num++;
         }
 
@@ -96,7 +103,7 @@ class DRange implements \Countable
         }
 
         while ($num < $rangesCount) {
-            $newRanges[] = clone($this->ranges[$num]);
+            $newRanges[] = $this->ranges[$num];
             $num++;
         }
 
