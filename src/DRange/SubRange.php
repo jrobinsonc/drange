@@ -29,11 +29,6 @@ class SubRange
         return $this->low . '-' . $this->high;
     }
 
-    public function __clone()
-    {
-        return new SubRange($this->low, $this->high);
-    }
-
     public function overlaps($range)
     {
         return !($this->high < $range->low || $this->low > $range->high);

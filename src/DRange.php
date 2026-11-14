@@ -42,6 +42,8 @@ class DRange implements \Countable
 
     protected function addSubRange($subRange)
     {
+        // Copy so the stored range never aliases an object owned by the caller.
+        $subRange = clone $subRange;
         $newRanges = [];
         $num = 0;
         $rangesCount = count($this->ranges);

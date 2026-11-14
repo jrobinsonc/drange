@@ -140,4 +140,41 @@ class DRangeTest extends \Codeception\Test\Unit
         $this->assertEquals('[ 0-9 ]', $drange);
         $this->assertEquals('[ 0-4, 6-9 ]', $drange2);
     }
+
+    public function testCloneDoesNotShareSubRanges()
+    {
+        $drange = new DRange(1, 3);
+        $drange2 = clone($drange);
+
+        $this->storedRanges($drange)[0]->low = 2;
+
+        $this->assertEquals('[ 2-3 ]', $drange);
+        $this->assertEquals('[ 1-3 ]', $drange2);
+    }
+
+    public function testAddDoesNotAliasCallerSubRange()
+    {
+        $subRange = new SubRange(1, 3);
+        $drange = new DRange();
+        $drange->add($subRange);
+
+        $subRange->low = 2;
+        $this->assertEquals('[ 1-3 ]', $drange);
+    }
+
+    public function testAddDoesNotAliasOtherDRangeSubRanges()
+    {
+        $source = new DRange(1, 3);
+        $target = new DRange();
+        $target->add($source);
+
+        $this->storedRanges($source)[0]->low = 2;
+        $this->assertEquals('[ 2-3 ]', $source);
+        $this->assertEquals('[ 1-3 ]', $target);
+    }
+
+    private function storedRanges(DRange $drange): array
+    {
+        return (new \ReflectionProperty(DRange::class, 'ranges'))->getValue($drange);
+    }
 }
