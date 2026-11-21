@@ -24,6 +24,13 @@ class RangeValidationTest extends \Codeception\Test\Unit
         $drange->subtract(10, 5);
     }
 
+    public function testIntersectInvalidRangeThrows()
+    {
+        $drange = new DRange(1, 5);
+        $this->expectException(\UnexpectedValueException::class);
+        $drange->intersect(10, 5);
+    }
+
     public function testSelfAddAndSubtract()
     {
         $drange = (new DRange(1, 5))->add(10, 15);

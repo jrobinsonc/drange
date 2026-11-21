@@ -62,33 +62,6 @@ class DRange implements \Countable
         $merged[] = $subRange;
     }
 
-    protected function addSubRange($subRange)
-    {
-        $newRanges = [];
-        $num = 0;
-        $rangesCount = count($this->ranges);
-
-        while ($num < $rangesCount && !$subRange->touches($this->ranges[$num])) {
-            $newRanges[] = $this->ranges[$num];
-            $num++;
-        }
-
-        while ($num < $rangesCount && $subRange->touches($this->ranges[$num])) {
-            $subRange = $subRange->add($this->ranges[$num]);
-            $num++;
-        }
-
-        $newRanges[] = $subRange;
-
-        while ($num < $rangesCount) {
-            $newRanges[] = $this->ranges[$num];
-            $num++;
-        }
-
-        $this->ranges = $newRanges;
-        $this->updateLength();
-    }
-
     public function add($rangeA, $rangeB = null)
     {
         $merged = [];
@@ -197,22 +170,12 @@ class DRange implements \Countable
     public function intersect($rangeA, $rangeB = null)
     {
         $result = new DRange();
-
-        if ($rangeA instanceof DRange) {
-            $other = $rangeA;
-        } elseif ($rangeA instanceof DRange\SubRange) {
-            $other = new DRange($rangeA);
-        } else {
-            if ($rangeB === null) {
-                $rangeB = $rangeA;
-            }
-            $other = new DRange($rangeA, $rangeB);
-        }
+        $otherRanges = $this->toSubRanges($rangeA, $rangeB);
 
         foreach ($this->ranges as $subRange) {
-            foreach ($other->ranges as $otherSubRange) {
+            foreach ($otherRanges as $otherSubRange) {
                 if ($subRange->overlaps($otherSubRange)) {
-                    $result->addSubRange(new DRange\SubRange(
+                    $result->add(new DRange\SubRange(
                         max($subRange->low, $otherSubRange->low),
                         min($subRange->high, $otherSubRange->high)
                     ));
