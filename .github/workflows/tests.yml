@@ -11,7 +11,7 @@ jobs:
         php-version: ['8.2', '8.3', '8.4', '8.5']
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -21,7 +21,7 @@ jobs:
         coverage: xdebug
 
     - name: Cache composer dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v6
       with:
         path: vendor
         key: composer-${{ hashFiles('**/composer.lock') }}
