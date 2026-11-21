@@ -361,6 +361,66 @@ class DRangeTest extends \Codeception\Test\Unit
         $this->assertEquals(0, count($empty));
     }
 
+    public function testIntersectMultiSubRangeDRanges()
+    {
+        // Does not mutate receiver or operand
+        $drange1 = (new DRange(1, 5))->add(10, 15);
+        $drange2 = (new DRange(3, 12))->add(20, 25);
+        $result = $drange1->intersect($drange2);
+        $this->assertNotSame($drange1, $result);
+        $this->assertNotSame($drange2, $result);
+        $this->assertEquals('[ 1-5, 10-15 ]', (string)$drange1);
+        $this->assertEquals(11, count($drange1));
+        $this->assertEquals('[ 3-12, 20-25 ]', (string)$drange2);
+        $this->assertEquals(16, count($drange2));
+        $this->assertEquals('[ 3-5, 10-12 ]', (string)$result);
+        $this->assertEquals(6, count($result));
+
+        // Multiple partial overlaps on both sides (interleaved)
+        $interleavedA = (new DRange(1, 6))->add(10, 16)->add(20, 26);
+        $interleavedB = (new DRange(4, 12))->add(14, 22);
+        $interleavedResult = $interleavedA->intersect($interleavedB);
+        $this->assertEquals('[ 4-6, 10-12, 14-16, 20-22 ]', (string)$interleavedResult);
+        $this->assertEquals(12, count($interleavedResult));
+
+        // One range spanning several on the other side (both directions)
+        $spanning = new DRange(2, 28);
+        $multiple = (new DRange(1, 5))->add(10, 15)->add(20, 25)->add(27, 30);
+        $spanResult1 = $spanning->intersect($multiple);
+        $this->assertEquals('[ 2-5, 10-15, 20-25, 27-28 ]', (string)$spanResult1);
+        $this->assertEquals(18, count($spanResult1));
+
+        $spanResult2 = $multiple->intersect($spanning);
+        $this->assertEquals('[ 2-5, 10-15, 20-25, 27-28 ]', (string)$spanResult2);
+        $this->assertEquals(18, count($spanResult2));
+
+        // Ranges meeting at a single shared integer
+        $touchingA = (new DRange(1, 5))->add(10, 15);
+        $touchingB = (new DRange(5, 10))->add(15, 20);
+        $touchingResult = $touchingA->intersect($touchingB);
+        $this->assertEquals('[ 5, 10, 15 ]', (string)$touchingResult);
+        $this->assertEquals(3, count($touchingResult));
+
+        // Adjacent ranges without overlap (off by 1)
+        $adjacentA = (new DRange(1, 4))->add(10, 14);
+        $adjacentB = (new DRange(5, 9))->add(15, 20);
+        $adjacentResult = $adjacentA->intersect($adjacentB);
+        $this->assertEquals('[  ]', (string)$adjacentResult);
+        $this->assertEquals(0, count($adjacentResult));
+
+        // Empty operand on either side
+        $nonEmpty = (new DRange(1, 5))->add(10, 15);
+        $empty = new DRange();
+
+        $emptyResult1 = $nonEmpty->intersect($empty);
+        $this->assertEquals('[  ]', (string)$emptyResult1);
+        $this->assertEquals(0, count($emptyResult1));
+
+        $emptyResult2 = $empty->intersect($nonEmpty);
+        $this->assertEquals('[  ]', (string)$emptyResult2);
+        $this->assertEquals(0, count($emptyResult2));
+    }
+
     private function storedRanges(DRange $drange): array
     {
         return (new ReflectionProperty(DRange::class, 'ranges'))->getValue($drange);
