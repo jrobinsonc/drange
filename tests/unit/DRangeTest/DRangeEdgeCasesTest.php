@@ -3,7 +3,7 @@ namespace jrdev\DRangeTest;
 
 use jrdev\DRange;
 
-class RangeValidationTest extends \Codeception\Test\Unit
+class DRangeEdgeCasesTest extends \Codeception\Test\Unit
 {
     /**
      * @var \jrdev\UnitTester

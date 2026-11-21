@@ -88,7 +88,7 @@ class DRange implements \Countable
         return $this;
     }
 
-    private function applySubtraction(
+    private function subtractAndEmitLeft(
         DRange\SubRange $current,
         DRange\SubRange $otherRange,
         array &$result
@@ -111,15 +111,13 @@ class DRange implements \Countable
     {
         $result = [];
         $index = 0;
-        $rangesCount = count($this->ranges);
-        $current = $rangesCount > 0 ? $this->ranges[0] : null;
+        $current = $this->ranges[$index++] ?? null;
 
         foreach ($this->toSubRanges($rangeA, $rangeB) as $otherRange) {
             while ($current !== null) {
                 if ($current->high < $otherRange->low) {
                     $result[] = $current;
-                    $index++;
-                    $current = $index < $rangesCount ? $this->ranges[$index] : null;
+                    $current = $this->ranges[$index++] ?? null;
                     continue;
                 }
 
@@ -127,21 +125,19 @@ class DRange implements \Countable
                     break;
                 }
 
-                $current = $this->applySubtraction($current, $otherRange, $result);
+                $current = $this->subtractAndEmitLeft($current, $otherRange, $result);
 
                 if ($current !== null) {
                     break;
                 }
 
-                $index++;
-                $current = $index < $rangesCount ? $this->ranges[$index] : null;
+                $current = $this->ranges[$index++] ?? null;
             }
         }
 
         while ($current !== null) {
             $result[] = $current;
-            $index++;
-            $current = $index < $rangesCount ? $this->ranges[$index] : null;
+            $current = $this->ranges[$index++] ?? null;
         }
 
         $this->ranges = $result;
