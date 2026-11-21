@@ -166,18 +166,35 @@ class DRange implements \Countable
     public function intersect($rangeA, $rangeB = null)
     {
         $result = new DRange();
-        $otherRanges = $this->toSubRanges($rangeA, $rangeB);
+        $index = 0;
+        $current = $this->ranges[$index++] ?? null;
 
-        foreach ($this->ranges as $subRange) {
-            foreach ($otherRanges as $otherSubRange) {
-                if ($subRange->overlaps($otherSubRange)) {
-                    $result->add(new DRange\SubRange(
-                        max($subRange->low, $otherSubRange->low),
-                        min($subRange->high, $otherSubRange->high)
-                    ));
+        foreach ($this->toSubRanges($rangeA, $rangeB) as $otherRange) {
+            while ($current !== null) {
+                if ($current->high < $otherRange->low) {
+                    $current = $this->ranges[$index++] ?? null;
+                    continue;
                 }
+
+                if ($otherRange->high < $current->low) {
+                    break;
+                }
+
+                $result->ranges[] = new DRange\SubRange(
+                    max($current->low, $otherRange->low),
+                    min($current->high, $otherRange->high)
+                );
+
+                if ($current->high <= $otherRange->high) {
+                    $current = $this->ranges[$index++] ?? null;
+                    continue;
+                }
+
+                break;
             }
         }
+
+        $result->updateLength();
 
         return $result;
     }
