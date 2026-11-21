@@ -121,15 +121,34 @@ class DRangeTest extends \Codeception\Test\Unit
 
     public function testIndex()
     {
+        $empty = new DRange();
+        $this->assertNull($empty->index(0));
+        $this->assertNull($empty->index(-1));
+
         $drange = new DRange(0, 9);
         $drange->add(20, 29);
+        $drange->add(35);
         $drange->add(40, 49);
 
+        $this->assertNull($drange->index(-1));
+        $this->assertEquals(0, $drange->index(0));
         $this->assertEquals(5, $drange->index(5));
+        $this->assertEquals(9, $drange->index(9));
+        $this->assertEquals(20, $drange->index(10));
         $this->assertEquals(25, $drange->index(15));
-        $this->assertEquals(45, $drange->index(25));
+        $this->assertEquals(29, $drange->index(19));
+        $this->assertEquals(35, $drange->index(20));
+        $this->assertEquals(40, $drange->index(21));
+        $this->assertEquals(45, $drange->index(26));
+        $this->assertEquals(49, $drange->index(30));
+        $this->assertNull($drange->index(31));
         $this->assertNull($drange->index(55));
-        $this->assertEquals(30, count($drange));
+        $this->assertEquals(31, count($drange));
+
+        $drange->subtract(20, 29);
+        $this->assertEquals(35, $drange->index(10));
+        $this->assertEquals(40, $drange->index(11));
+        $this->assertNull($drange->index(21));
     }
 
     public function testClone()

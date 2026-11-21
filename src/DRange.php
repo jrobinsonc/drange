@@ -5,6 +5,7 @@ class DRange implements \Countable
 {
     protected $ranges;
     protected $length;
+    private array $cumulativeLengths = [];
 
     public function __construct($rangeA = null, $rangeB = null)
     {
@@ -28,9 +29,15 @@ class DRange implements \Countable
 
     protected function updateLength()
     {
-        $this->length = array_reduce($this->ranges, function ($previous, $range) {
-            return $previous + $range->length;
-        }, 0);
+        $total = 0;
+        $this->cumulativeLengths = [];
+
+        foreach ($this->ranges as $range) {
+            $total += $range->length;
+            $this->cumulativeLengths[] = $total;
+        }
+
+        $this->length = $total;
     }
 
     private function toSubRanges($rangeA, $rangeB = null): iterable
@@ -148,19 +155,27 @@ class DRange implements \Countable
 
     public function index($index)
     {
-        $num = 0;
-        $rangesCount = count($this->ranges);
-
-        while ($num < $rangesCount && $this->ranges[$num]->length <= $index) {
-            $index -= $this->ranges[$num]->length;
-            $num++;
-        }
-
-        if ($num >= $rangesCount) {
+        if ($index < 0 || $index >= $this->length) {
             return null;
         }
 
-        return $this->ranges[$num]->low + $index;
+        $low = 0;
+        $high = count($this->ranges) - 1;
+
+        while ($low < $high) {
+            $mid = intdiv($low + $high, 2);
+
+            if ($this->cumulativeLengths[$mid] <= $index) {
+                $low = $mid + 1;
+            } else {
+                $high = $mid;
+            }
+        }
+
+        $range = $this->ranges[$low];
+        $offset = $this->cumulativeLengths[$low] - $range->length;
+
+        return $range->low + ($index - $offset);
     }
 
     public function intersect($rangeA, $rangeB = null)
