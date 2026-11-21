@@ -5,6 +5,7 @@ class DRange implements \Countable
 {
     protected $ranges;
     protected $length;
+    private array $cumulativeLengths = [];
 
     public function __construct($rangeA = null, $rangeB = null)
     {
@@ -28,9 +29,15 @@ class DRange implements \Countable
 
     protected function updateLength()
     {
-        $this->length = array_reduce($this->ranges, function ($previous, $range) {
-            return $previous + $range->length;
-        }, 0);
+        $total = 0;
+        $this->cumulativeLengths = [];
+
+        foreach ($this->ranges as $range) {
+            $total += $range->length;
+            $this->cumulativeLengths[] = $total;
+        }
+
+        $this->length = $total;
     }
 
     private function toSubRanges($rangeA, $rangeB = null): iterable
@@ -146,21 +153,56 @@ class DRange implements \Countable
         return $this;
     }
 
-    public function index($index)
+    public function index($position)
     {
-        $num = 0;
-        $rangesCount = count($this->ranges);
-
-        while ($num < $rangesCount && $this->ranges[$num]->length <= $index) {
-            $index -= $this->ranges[$num]->length;
-            $num++;
-        }
-
-        if ($num >= $rangesCount) {
+        if ($position < 0 || $position >= $this->length) {
             return null;
         }
 
-        return $this->ranges[$num]->low + $index;
+        $low = 0;
+        $high = count($this->ranges) - 1;
+
+        while ($low < $high) {
+            $mid = intdiv($low + $high, 2);
+
+            if ($this->cumulativeLengths[$mid] <= $position) {
+                $low = $mid + 1;
+            } else {
+                $high = $mid;
+            }
+        }
+
+        $subRange = $this->ranges[$low];
+        $startPosition = $this->cumulativeLengths[$low] - $subRange->length;
+
+        return $subRange->low + ($position - $startPosition);
+    }
+
+    public function indexOf($value): ?int
+    {
+        $low = 0;
+        $high = count($this->ranges) - 1;
+
+        while ($low <= $high) {
+            $mid = intdiv($low + $high, 2);
+            $subRange = $this->ranges[$mid];
+
+            if ($value < $subRange->low) {
+                $high = $mid - 1;
+                continue;
+            }
+
+            if ($value > $subRange->high) {
+                $low = $mid + 1;
+                continue;
+            }
+
+            $startPosition = $this->cumulativeLengths[$mid] - $subRange->length;
+
+            return $startPosition + ($value - $subRange->low);
+        }
+
+        return null;
     }
 
     public function intersect($rangeA, $rangeB = null)
