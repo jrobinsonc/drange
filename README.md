@@ -171,6 +171,10 @@ $drange->subtract(new SubRange(4, 6));
 - **Seat allocation** — Model auditorium or transit rows as numeric ranges; subtract reserved seats and inspect the remaining range to find the next available contiguous block.
 - **IP address management** — Convert IPv4 addresses to 32-bit integers and use `DRange` to track allocated and free address blocks without needing a dedicated CIDR library.
 
+## Versioning
+
+DRange follows [Semantic Versioning](https://semver.org). See [CHANGELOG.md](CHANGELOG.md) for the changes in each release, and [RELEASING.md](RELEASING.md) for how releases are cut.
+
 ## License
 
 Licensed under the [MIT licence](https://github.com/jrobinsonc/drange/blob/master/LICENSE).
