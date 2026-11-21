@@ -2,6 +2,7 @@
 namespace jrdev;
 
 use jrdev\DRange\SubRange;
+use ReflectionProperty;
 
 class DRangeTest extends \Codeception\Test\Unit
 {
@@ -175,6 +176,6 @@ class DRangeTest extends \Codeception\Test\Unit
 
     private function storedRanges(DRange $drange): array
     {
-        return (new \ReflectionProperty(DRange::class, 'ranges'))->getValue($drange);
+        return (new ReflectionProperty(DRange::class, 'ranges'))->getValue($drange);
     }
 }
