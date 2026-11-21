@@ -253,6 +253,60 @@ class DRangeTest extends \Codeception\Test\Unit
         $this->storedRanges($target)[0]->low = 2;
     }
 
+    public function testAddMultiSubRangeDRanges()
+    {
+        // Disjoint with earlier and interleaved ranges
+        $disjoint = (new DRange(10, 15))->add(30, 35);
+        $disjointOther = (new DRange(1, 5))->add(20, 25)->add(40, 45);
+        $this->assertSame($disjoint, $disjoint->add($disjointOther));
+        $this->assertEquals('[ 1-5, 10-15, 20-25, 30-35, 40-45 ]', (string)$disjoint);
+        $this->assertEquals(29, count($disjoint));
+
+        // Interleaving overlaps
+        $interleaved = (new DRange(1, 5))->add(10, 15)->add(20, 25);
+        $interleavedOther = (new DRange(3, 12))->add(18, 22);
+        $interleaved->add($interleavedOther);
+        $this->assertEquals('[ 1-15, 18-25 ]', (string)$interleaved);
+        $this->assertEquals(23, count($interleaved));
+
+        // Touching at boundaries
+        $touching = (new DRange(1, 5))->add(10, 15);
+        $touchingOther = (new DRange(6, 9))->add(16, 20);
+        $touching->add($touchingOther);
+        $this->assertEquals('[ 1-20 ]', (string)$touching);
+        $this->assertEquals(20, count($touching));
+
+        // Target fully contains added multi-sub-range DRange
+        $outer = new DRange(1, 30);
+        $inner = (new DRange(5, 10))->add(15, 20);
+        $outer->add($inner);
+        $this->assertEquals('[ 1-30 ]', (string)$outer);
+        $this->assertEquals(30, count($outer));
+
+        // Added DRange fully contains target's multiple sub-ranges
+        $inner->add(new DRange(1, 30));
+        $this->assertEquals('[ 1-30 ]', (string)$inner);
+        $this->assertEquals(30, count($inner));
+
+        // Empty DRange cases
+        $nonEmpty = (new DRange(1, 3))->add(7, 9);
+        $nonEmpty->add(new DRange());
+        $this->assertEquals('[ 1-3, 7-9 ]', (string)$nonEmpty);
+        $this->assertEquals(6, count($nonEmpty));
+
+        $empty = new DRange();
+        $empty->add($nonEmpty);
+        $this->assertEquals('[ 1-3, 7-9 ]', (string)$empty);
+        $this->assertEquals(6, count($empty));
+    }
+
+    public function testAddInvalidRangeThrows()
+    {
+        $drange = new DRange(1, 5);
+        $this->expectException(\UnexpectedValueException::class);
+        $drange->add(10, 5);
+    }
+
     private function storedRanges(DRange $drange): array
     {
         return (new ReflectionProperty(DRange::class, 'ranges'))->getValue($drange);

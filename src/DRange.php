@@ -33,6 +33,35 @@ class DRange implements \Countable
         }, 0);
     }
 
+    private function toSubRanges($rangeA, $rangeB = null): iterable
+    {
+        if ($rangeA instanceof DRange) {
+            return $rangeA->ranges;
+        }
+
+        if ($rangeA instanceof DRange\SubRange) {
+            return [$rangeA];
+        }
+
+        if ($rangeB === null) {
+            $rangeB = $rangeA;
+        }
+
+        return [new DRange\SubRange($rangeA, $rangeB)];
+    }
+
+    private function appendMerged(array &$merged, DRange\SubRange $subRange): void
+    {
+        $lastIndex = count($merged) - 1;
+
+        if ($lastIndex >= 0 && $merged[$lastIndex]->touches($subRange)) {
+            $merged[$lastIndex] = $merged[$lastIndex]->add($subRange);
+            return;
+        }
+
+        $merged[] = $subRange;
+    }
+
     protected function addSubRange($subRange)
     {
         $newRanges = [];
@@ -62,19 +91,26 @@ class DRange implements \Countable
 
     public function add($rangeA, $rangeB = null)
     {
-        if ($rangeA instanceof DRange) {
-            foreach ($rangeA->ranges as $item) {
-                $this->addSubRange($item);
-            }
-        } elseif ($rangeA instanceof DRange\SubRange) {
-            $this->addSubRange($rangeA);
-        } else {
-            if ($rangeB === null) {
-                $rangeB = $rangeA;
+        $merged = [];
+        $index = 0;
+        $rangesCount = count($this->ranges);
+
+        foreach ($this->toSubRanges($rangeA, $rangeB) as $otherRange) {
+            while ($index < $rangesCount && $this->ranges[$index]->low <= $otherRange->low) {
+                $this->appendMerged($merged, $this->ranges[$index]);
+                $index++;
             }
 
-            $this->addSubRange(new DRange\SubRange($rangeA, $rangeB));
+            $this->appendMerged($merged, $otherRange);
         }
+
+        while ($index < $rangesCount) {
+            $this->appendMerged($merged, $this->ranges[$index]);
+            $index++;
+        }
+
+        $this->ranges = $merged;
+        $this->updateLength();
 
         return $this;
     }
