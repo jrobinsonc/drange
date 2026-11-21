@@ -33,92 +33,115 @@ class DRange implements \Countable
         }, 0);
     }
 
-    protected function addSubRange($subRange)
+    private function toSubRanges($rangeA, $rangeB = null): iterable
     {
-        $newRanges = [];
-        $num = 0;
-        $rangesCount = count($this->ranges);
-
-        while ($num < $rangesCount && !$subRange->touches($this->ranges[$num])) {
-            $newRanges[] = $this->ranges[$num];
-            $num++;
+        if ($rangeA instanceof DRange) {
+            return $rangeA->ranges;
         }
 
-        while ($num < $rangesCount && $subRange->touches($this->ranges[$num])) {
-            $subRange = $subRange->add($this->ranges[$num]);
-            $num++;
+        if ($rangeA instanceof DRange\SubRange) {
+            return [$rangeA];
         }
 
-        $newRanges[] = $subRange;
-
-        while ($num < $rangesCount) {
-            $newRanges[] = $this->ranges[$num];
-            $num++;
+        if ($rangeB === null) {
+            $rangeB = $rangeA;
         }
 
-        $this->ranges = $newRanges;
-        $this->updateLength();
+        return [new DRange\SubRange($rangeA, $rangeB)];
+    }
+
+    private function appendMerged(array &$merged, DRange\SubRange $subRange): void
+    {
+        $lastIndex = count($merged) - 1;
+
+        if ($lastIndex >= 0 && $merged[$lastIndex]->touches($subRange)) {
+            $merged[$lastIndex] = $merged[$lastIndex]->add($subRange);
+            return;
+        }
+
+        $merged[] = $subRange;
     }
 
     public function add($rangeA, $rangeB = null)
     {
-        if ($rangeA instanceof DRange) {
-            foreach ($rangeA->ranges as $item) {
-                $this->addSubRange($item);
-            }
-        } elseif ($rangeA instanceof DRange\SubRange) {
-            $this->addSubRange($rangeA);
-        } else {
-            if ($rangeB === null) {
-                $rangeB = $rangeA;
+        $merged = [];
+        $index = 0;
+        $rangesCount = count($this->ranges);
+
+        foreach ($this->toSubRanges($rangeA, $rangeB) as $otherRange) {
+            while ($index < $rangesCount && $this->ranges[$index]->low <= $otherRange->low) {
+                $this->appendMerged($merged, $this->ranges[$index]);
+                $index++;
             }
 
-            $this->addSubRange(new DRange\SubRange($rangeA, $rangeB));
+            $this->appendMerged($merged, $otherRange);
         }
+
+        while ($index < $rangesCount) {
+            $this->appendMerged($merged, $this->ranges[$index]);
+            $index++;
+        }
+
+        $this->ranges = $merged;
+        $this->updateLength();
 
         return $this;
     }
 
-    protected function subtractSubRange($subRange)
-    {
-        $newRanges = [];
-        $num = 0;
-        $rangesCount = count($this->ranges);
+    private function subtractAndEmitLeft(
+        DRange\SubRange $current,
+        DRange\SubRange $otherRange,
+        array &$result
+    ): ?DRange\SubRange {
+        $remainder = null;
 
-        while ($num < $rangesCount && !$subRange->overlaps($this->ranges[$num])) {
-            $newRanges[] = $this->ranges[$num];
-            $num++;
+        foreach ($current->subtract($otherRange) as $piece) {
+            if ($piece->high < $otherRange->low) {
+                $result[] = $piece;
+                continue;
+            }
+
+            $remainder = $piece;
         }
 
-        while ($num < $rangesCount && $subRange->overlaps($this->ranges[$num])) {
-            $newRanges = array_merge($newRanges, $this->ranges[$num]->subtract($subRange));
-            $num++;
-        }
-
-        while ($num < $rangesCount) {
-            $newRanges[] = $this->ranges[$num];
-            $num++;
-        }
-
-        $this->ranges = $newRanges;
-        $this->updateLength();
+        return $remainder;
     }
 
     public function subtract($rangeA, $rangeB = null)
     {
-        if ($rangeA instanceof DRange) {
-            foreach ($rangeA->ranges as $item) {
-                $this->subtractSubRange($item);
-            }
-        } elseif ($rangeA instanceof DRange\SubRange) {
-            $this->subtractSubRange($rangeA);
-        } else {
-            if ($rangeB === null) {
-                $rangeB = $rangeA;
-            }
+        $result = [];
+        $index = 0;
+        $current = $this->ranges[$index++] ?? null;
 
-            $this->subtractSubRange(new DRange\SubRange($rangeA, $rangeB));
+        foreach ($this->toSubRanges($rangeA, $rangeB) as $otherRange) {
+            while ($current !== null) {
+                if ($current->high < $otherRange->low) {
+                    $result[] = $current;
+                    $current = $this->ranges[$index++] ?? null;
+                    continue;
+                }
+
+                if ($otherRange->high < $current->low) {
+                    break;
+                }
+
+                $current = $this->subtractAndEmitLeft($current, $otherRange, $result);
+
+                if ($current !== null) {
+                    break;
+                }
+
+                $current = $this->ranges[$index++] ?? null;
+            }
         }
+
+        while ($current !== null) {
+            $result[] = $current;
+            $current = $this->ranges[$index++] ?? null;
+        }
+
+        $this->ranges = $result;
+        $this->updateLength();
 
         return $this;
     }
@@ -143,22 +166,12 @@ class DRange implements \Countable
     public function intersect($rangeA, $rangeB = null)
     {
         $result = new DRange();
-
-        if ($rangeA instanceof DRange) {
-            $other = $rangeA;
-        } elseif ($rangeA instanceof DRange\SubRange) {
-            $other = new DRange($rangeA);
-        } else {
-            if ($rangeB === null) {
-                $rangeB = $rangeA;
-            }
-            $other = new DRange($rangeA, $rangeB);
-        }
+        $otherRanges = $this->toSubRanges($rangeA, $rangeB);
 
         foreach ($this->ranges as $subRange) {
-            foreach ($other->ranges as $otherSubRange) {
+            foreach ($otherRanges as $otherSubRange) {
                 if ($subRange->overlaps($otherSubRange)) {
-                    $result->addSubRange(new DRange\SubRange(
+                    $result->add(new DRange\SubRange(
                         max($subRange->low, $otherSubRange->low),
                         min($subRange->high, $otherSubRange->high)
                     ));
