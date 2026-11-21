@@ -4,6 +4,9 @@ namespace jrdev;
 use jrdev\DRange\SubRange;
 use ReflectionProperty;
 
+/**
+ * @SuppressWarnings(PHPMD.TooManyMethods)
+ */
 class DRangeTest extends \Codeception\Test\Unit
 {
     /**
@@ -149,6 +152,81 @@ class DRangeTest extends \Codeception\Test\Unit
         $this->assertEquals(35, $drange->index(10));
         $this->assertEquals(40, $drange->index(11));
         $this->assertNull($drange->index(21));
+    }
+
+    public function testIndexOf()
+    {
+        $empty = new DRange();
+        $this->assertNull($empty->indexOf(0));
+        $this->assertNull($empty->indexOf(-5));
+
+        $drange = new DRange(0, 9);
+        $drange->add(20, 29);
+        $drange->add(35);
+        $drange->add(40, 49);
+
+        // Before first sub-range
+        $this->assertNull($drange->indexOf(-1));
+        $this->assertNull($drange->indexOf(-10));
+
+        // First sub-range [0-9] -> positions 0..9
+        $this->assertSame(0, $drange->indexOf(0));
+        $this->assertSame(5, $drange->indexOf(5));
+        $this->assertSame(9, $drange->indexOf(9));
+
+        // Gap between 9 and 20
+        $this->assertNull($drange->indexOf(10));
+        $this->assertNull($drange->indexOf(15));
+        $this->assertNull($drange->indexOf(19));
+
+        // Second sub-range [20-29] -> positions 10..19
+        $this->assertSame(10, $drange->indexOf(20));
+        $this->assertSame(15, $drange->indexOf(25));
+        $this->assertSame(19, $drange->indexOf(29));
+
+        // Gap between 29 and 35
+        $this->assertNull($drange->indexOf(30));
+        $this->assertNull($drange->indexOf(34));
+
+        // Single-value sub-range [35] -> position 20
+        $this->assertSame(20, $drange->indexOf(35));
+
+        // Gap between 35 and 40
+        $this->assertNull($drange->indexOf(36));
+        $this->assertNull($drange->indexOf(39));
+
+        // Fourth sub-range [40-49] -> positions 21..30
+        $this->assertSame(21, $drange->indexOf(40));
+        $this->assertSame(26, $drange->indexOf(45));
+        $this->assertSame(30, $drange->indexOf(49));
+
+        // After last sub-range
+        $this->assertNull($drange->indexOf(50));
+        $this->assertNull($drange->indexOf(100));
+
+        // Round-trip consistency with index()
+        $totalLength = count($drange);
+        for ($position = 0; $position < $totalLength; $position++) {
+            $this->assertSame($position, $drange->indexOf($drange->index($position)));
+        }
+
+        // After subtract mutation
+        $drange->subtract(20, 29);
+        $this->assertNull($drange->indexOf(20));
+        $this->assertNull($drange->indexOf(25));
+        $this->assertSame(10, $drange->indexOf(35));
+        $this->assertSame(11, $drange->indexOf(40));
+        $this->assertSame(20, $drange->indexOf(49));
+
+        // Negative integer sub-ranges
+        $negative = (new DRange(-10, -5))->add(0, 3);
+        $this->assertNull($negative->indexOf(-11));
+        $this->assertSame(0, $negative->indexOf(-10));
+        $this->assertSame(5, $negative->indexOf(-5));
+        $this->assertNull($negative->indexOf(-4));
+        $this->assertSame(6, $negative->indexOf(0));
+        $this->assertSame(9, $negative->indexOf(3));
+        $this->assertNull($negative->indexOf(4));
     }
 
     public function testClone()

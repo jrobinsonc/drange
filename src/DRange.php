@@ -178,6 +178,33 @@ class DRange implements \Countable
         return $range->low + ($index - $offset);
     }
 
+    public function indexOf($value): ?int
+    {
+        $low = 0;
+        $high = count($this->ranges) - 1;
+
+        while ($low <= $high) {
+            $mid = intdiv($low + $high, 2);
+            $range = $this->ranges[$mid];
+
+            if ($value < $range->low) {
+                $high = $mid - 1;
+                continue;
+            }
+
+            if ($value > $range->high) {
+                $low = $mid + 1;
+                continue;
+            }
+
+            $offset = $this->cumulativeLengths[$mid] - $range->length;
+
+            return $offset + ($value - $range->low);
+        }
+
+        return null;
+    }
+
     public function intersect($rangeA, $rangeB = null)
     {
         $result = new DRange();
