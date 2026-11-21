@@ -115,46 +115,64 @@ class DRange implements \Countable
         return $this;
     }
 
-    protected function subtractSubRange($subRange)
-    {
-        $newRanges = [];
-        $num = 0;
-        $rangesCount = count($this->ranges);
+    private function applySubtraction(
+        DRange\SubRange $current,
+        DRange\SubRange $otherRange,
+        array &$result
+    ): ?DRange\SubRange {
+        $remainder = null;
 
-        while ($num < $rangesCount && !$subRange->overlaps($this->ranges[$num])) {
-            $newRanges[] = $this->ranges[$num];
-            $num++;
+        foreach ($current->subtract($otherRange) as $piece) {
+            if ($piece->high < $otherRange->low) {
+                $result[] = $piece;
+                continue;
+            }
+
+            $remainder = $piece;
         }
 
-        while ($num < $rangesCount && $subRange->overlaps($this->ranges[$num])) {
-            $newRanges = array_merge($newRanges, $this->ranges[$num]->subtract($subRange));
-            $num++;
-        }
-
-        while ($num < $rangesCount) {
-            $newRanges[] = $this->ranges[$num];
-            $num++;
-        }
-
-        $this->ranges = $newRanges;
-        $this->updateLength();
+        return $remainder;
     }
 
     public function subtract($rangeA, $rangeB = null)
     {
-        if ($rangeA instanceof DRange) {
-            foreach ($rangeA->ranges as $item) {
-                $this->subtractSubRange($item);
-            }
-        } elseif ($rangeA instanceof DRange\SubRange) {
-            $this->subtractSubRange($rangeA);
-        } else {
-            if ($rangeB === null) {
-                $rangeB = $rangeA;
-            }
+        $result = [];
+        $index = 0;
+        $rangesCount = count($this->ranges);
+        $current = $rangesCount > 0 ? $this->ranges[0] : null;
 
-            $this->subtractSubRange(new DRange\SubRange($rangeA, $rangeB));
+        foreach ($this->toSubRanges($rangeA, $rangeB) as $otherRange) {
+            while ($current !== null) {
+                if ($current->high < $otherRange->low) {
+                    $result[] = $current;
+                    $index++;
+                    $current = $index < $rangesCount ? $this->ranges[$index] : null;
+                    continue;
+                }
+
+                if ($otherRange->high < $current->low) {
+                    break;
+                }
+
+                $current = $this->applySubtraction($current, $otherRange, $result);
+
+                if ($current !== null) {
+                    break;
+                }
+
+                $index++;
+                $current = $index < $rangesCount ? $this->ranges[$index] : null;
+            }
         }
+
+        while ($current !== null) {
+            $result[] = $current;
+            $index++;
+            $current = $index < $rangesCount ? $this->ranges[$index] : null;
+        }
+
+        $this->ranges = $result;
+        $this->updateLength();
 
         return $this;
     }

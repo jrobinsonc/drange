@@ -300,11 +300,65 @@ class DRangeTest extends \Codeception\Test\Unit
         $this->assertEquals(6, count($empty));
     }
 
-    public function testAddInvalidRangeThrows()
+    public function testSubtractMultiSubRangeDRanges()
     {
-        $drange = new DRange(1, 5);
-        $this->expectException(\UnexpectedValueException::class);
-        $drange->add(10, 5);
+        // Disjoint
+        $disjoint = (new DRange(10, 15))->add(25, 30);
+        $disjointOther = (new DRange(1, 5))->add(18, 22)->add(35, 40);
+        $this->assertSame($disjoint, $disjoint->subtract($disjointOther));
+        $this->assertEquals('[ 10-15, 25-30 ]', (string)$disjoint);
+        $this->assertEquals(12, count($disjoint));
+
+        // Adjacent boundaries (non-overlapping)
+        $adjacent = (new DRange(5, 10))->add(15, 20);
+        $adjacentOther = (new DRange(1, 4))->add(11, 14)->add(21, 25);
+        $adjacent->subtract($adjacentOther);
+        $this->assertEquals('[ 5-10, 15-20 ]', (string)$adjacent);
+        $this->assertEquals(12, count($adjacent));
+
+        // Boundary overlap by a single integer
+        $boundaryOverlap = (new DRange(5, 10))->add(15, 20);
+        $boundaryOther = (new DRange(1, 5))->add(10, 15)->add(20, 25);
+        $boundaryOverlap->subtract($boundaryOther);
+        $this->assertEquals('[ 6-9, 16-19 ]', (string)$boundaryOverlap);
+        $this->assertEquals(8, count($boundaryOverlap));
+
+        // Interleaving overlaps spanning across sub-ranges
+        $interleaved = (new DRange(1, 10))->add(15, 25)->add(30, 40);
+        $interleavedOther = (new DRange(5, 18))->add(22, 35);
+        $interleaved->subtract($interleavedOther);
+        $this->assertEquals('[ 1-4, 19-21, 36-40 ]', (string)$interleaved);
+        $this->assertEquals(12, count($interleaved));
+
+        // Target fully contains subtracted multi-sub-range DRange
+        $outer = new DRange(1, 100);
+        $inner = (new DRange(10, 20))->add(30, 40)->add(50, 60);
+        $outer->subtract($inner);
+        $this->assertEquals('[ 1-9, 21-29, 41-49, 61-100 ]', (string)$outer);
+        $this->assertEquals(67, count($outer));
+
+        // Subtracted DRange fully contains target's multiple sub-ranges
+        $multiTarget = (new DRange(5, 10))->add(15, 20)->add(25, 30);
+        $multiTarget->subtract(new DRange(1, 35));
+        $this->assertEquals('[  ]', (string)$multiTarget);
+        $this->assertEquals(0, count($multiTarget));
+
+        // Exact match across multiple sub-ranges
+        $exact = (new DRange(5, 10))->add(15, 20);
+        $exact->subtract((new DRange(5, 10))->add(15, 20));
+        $this->assertEquals('[  ]', (string)$exact);
+        $this->assertEquals(0, count($exact));
+
+        // Empty DRange cases
+        $nonEmpty = (new DRange(1, 3))->add(7, 9);
+        $nonEmpty->subtract(new DRange());
+        $this->assertEquals('[ 1-3, 7-9 ]', (string)$nonEmpty);
+        $this->assertEquals(6, count($nonEmpty));
+
+        $empty = new DRange();
+        $empty->subtract($nonEmpty);
+        $this->assertEquals('[  ]', (string)$empty);
+        $this->assertEquals(0, count($empty));
     }
 
     private function storedRanges(DRange $drange): array
