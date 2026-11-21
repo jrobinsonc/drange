@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Extract release notes from CHANGELOG.md
+      run: |
+        version="${GITHUB_REF_NAME#v}"
+        awk -v ver="$version" '
+          $0 ~ "^## \\[" ver "\\]" { found = 1; next }
+          found && /^## \[/ { exit }
+          found && /^\[.*\]: / { exit }
+          found { print }
+        ' CHANGELOG.md > release-notes.md
+        if [ ! -s release-notes.md ]; then
+          echo "No CHANGELOG.md section found for $version" >&2
+          exit 1
+        fi
+
+    - name: Create GitHub release
+      uses: softprops/action-gh-release@v2
+      with:
+        name: ${{ github.ref_name }}
+        body_path: release-notes.md
