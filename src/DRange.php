@@ -153,9 +153,9 @@ class DRange implements \Countable
         return $this;
     }
 
-    public function index($index)
+    public function index($position)
     {
-        if ($index < 0 || $index >= $this->length) {
+        if ($position < 0 || $position >= $this->length) {
             return null;
         }
 
@@ -165,17 +165,17 @@ class DRange implements \Countable
         while ($low < $high) {
             $mid = intdiv($low + $high, 2);
 
-            if ($this->cumulativeLengths[$mid] <= $index) {
+            if ($this->cumulativeLengths[$mid] <= $position) {
                 $low = $mid + 1;
             } else {
                 $high = $mid;
             }
         }
 
-        $range = $this->ranges[$low];
-        $offset = $this->cumulativeLengths[$low] - $range->length;
+        $subRange = $this->ranges[$low];
+        $startPosition = $this->cumulativeLengths[$low] - $subRange->length;
 
-        return $range->low + ($index - $offset);
+        return $subRange->low + ($position - $startPosition);
     }
 
     public function indexOf($value): ?int
@@ -185,21 +185,21 @@ class DRange implements \Countable
 
         while ($low <= $high) {
             $mid = intdiv($low + $high, 2);
-            $range = $this->ranges[$mid];
+            $subRange = $this->ranges[$mid];
 
-            if ($value < $range->low) {
+            if ($value < $subRange->low) {
                 $high = $mid - 1;
                 continue;
             }
 
-            if ($value > $range->high) {
+            if ($value > $subRange->high) {
                 $low = $mid + 1;
                 continue;
             }
 
-            $offset = $this->cumulativeLengths[$mid] - $range->length;
+            $startPosition = $this->cumulativeLengths[$mid] - $subRange->length;
 
-            return $offset + ($value - $range->low);
+            return $startPosition + ($value - $subRange->low);
         }
 
         return null;
