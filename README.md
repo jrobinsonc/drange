@@ -1,14 +1,15 @@
 # DRange
 
+[![Tests](https://github.com/jrobinsonc/drange/actions/workflows/tests.yml/badge.svg)](https://github.com/jrobinsonc/drange/actions/workflows/tests.yml)
 [![Latest Version](https://img.shields.io/packagist/v/jrdev/drange)](https://packagist.org/packages/jrdev/drange)
-[![PHP](https://img.shields.io/badge/php-%3E%3D5.4-8892bf)](https://www.php.net/)
+[![PHP](https://img.shields.io/badge/php-%3E%3D8.2-8892bf)](https://www.php.net/)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/jrobinsonc/drange/blob/master/LICENSE)
 
 DRange is a PHP library for managing **discontinuous (non-contiguous) ranges of integers**. Rather than storing every number individually, it holds a compact, sorted list of contiguous sub-ranges — automatically merging adjacent ranges when you add numbers and splitting them when you subtract. The result is an expressive, memory-efficient structure for any problem that involves gaps in sequences.
 
 ## Features
 
-- Add or subtract individual integers, numeric ranges, `SubRange` instances, or entire `DRange` objects
+- Add, subtract, or intersect individual integers, numeric ranges, `SubRange` instances, or entire `DRange` objects
 - Automatic merging of adjacent and overlapping ranges on `add()`
 - Automatic splitting of ranges on `subtract()`
 - Random-access by logical index (`->index($n)`) across all sub-ranges
@@ -20,7 +21,7 @@ DRange is a PHP library for managing **discontinuous (non-contiguous) ranges of 
 
 ## Requirements
 
-- PHP >= 5.4
+- PHP >= 8.2
 - Composer
 
 ## Installation
@@ -63,6 +64,10 @@ echo count($drange);    // 5
 | `->subtract($low, $high)` | `$this` | Subtract a contiguous range |
 | `->subtract($drange)` | `$this` | Subtract all sub-ranges of another `DRange` |
 | `->subtract($subrange)` | `$this` | Subtract a `SubRange` instance |
+| `->intersect($n)` | `DRange` | New range containing only integers present in both this range and `$n` |
+| `->intersect($low, $high)` | `DRange` | Intersection with a contiguous range |
+| `->intersect($drange)` | `DRange` | Intersection with another `DRange` |
+| `->intersect($subrange)` | `DRange` | Intersection with a `SubRange` instance |
 | `->index($i)` | `int\|null` | Value at logical position `$i` (0-based); `null` if out of bounds |
 | `count($drange)` | `int` | Total number of integers across all sub-ranges |
 | `(string) $drange` | `string` | e.g. `"[ 1-5, 8-10 ]"` |
@@ -129,6 +134,21 @@ $drange = new DRange(1, 5);   // 5 elements
 $drange->add(10, 15);          // 6 more
 
 count($drange); // 11
+```
+
+### Computing intersections with `intersect()`
+
+```php
+$available = new DRange(1, 10);
+$available->add(20, 30);
+// [ 1-10, 20-30 ]
+
+$requested = new DRange(5, 25);
+
+$overlap = $available->intersect($requested);
+// [ 5-10, 20-25 ]
+
+count($overlap); // 12
 ```
 
 ### Using `SubRange` directly

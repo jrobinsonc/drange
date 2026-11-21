@@ -16,19 +16,19 @@ class DRange implements \Countable
         }
     }
 
-    public function __clone()
+    public function __toString()
+    {
+        return '[ ' . implode(', ', $this->ranges) . ' ]';
+    }
+
+    public function __clone(): void
     {
         foreach ($this->ranges as $key => $range) {
             $this->ranges[$key] = clone $range;
         }
     }
 
-    public function __toString()
-    {
-        return '[ ' . implode(', ', $this->ranges) . ' ]';
-    }
-
-    public function count()
+    public function count(): int
     {
         return $this->length;
     }
@@ -37,7 +37,7 @@ class DRange implements \Countable
     {
         $this->length = array_reduce($this->ranges, function ($previous, $range) {
             return $previous + $range->length;
-        });
+        }, 0);
     }
 
     protected function addSubRange($subRange)
@@ -49,7 +49,7 @@ class DRange implements \Countable
         $rangesCount = count($this->ranges);
 
         while ($num < $rangesCount && !$subRange->touches($this->ranges[$num])) {
-            $newRanges[] = clone($this->ranges[$num]);
+            $newRanges[] = $this->ranges[$num];
             $num++;
         }
 
@@ -61,7 +61,7 @@ class DRange implements \Countable
         $newRanges[] = $subRange;
 
         while ($num < $rangesCount) {
-            $newRanges[] = clone($this->ranges[$num]);
+            $newRanges[] = $this->ranges[$num];
             $num++;
         }
 
@@ -95,7 +95,7 @@ class DRange implements \Countable
         $rangesCount = count($this->ranges);
 
         while ($num < $rangesCount && !$subRange->overlaps($this->ranges[$num])) {
-            $newRanges[] = clone($this->ranges[$num]);
+            $newRanges[] = $this->ranges[$num];
             $num++;
         }
 
@@ -105,7 +105,7 @@ class DRange implements \Countable
         }
 
         while ($num < $rangesCount) {
-            $newRanges[] = clone($this->ranges[$num]);
+            $newRanges[] = $this->ranges[$num];
             $num++;
         }
 
@@ -147,5 +147,34 @@ class DRange implements \Countable
         }
 
         return $this->ranges[$num]->low + $index;
+    }
+
+    public function intersect($rangeA, $rangeB = null)
+    {
+        $result = new DRange();
+
+        if ($rangeA instanceof DRange) {
+            $other = $rangeA;
+        } elseif ($rangeA instanceof DRange\SubRange) {
+            $other = new DRange($rangeA);
+        } else {
+            if ($rangeB === null) {
+                $rangeB = $rangeA;
+            }
+            $other = new DRange($rangeA, $rangeB);
+        }
+
+        foreach ($this->ranges as $subRange) {
+            foreach ($other->ranges as $otherSubRange) {
+                if ($subRange->overlaps($otherSubRange)) {
+                    $result->addSubRange(new DRange\SubRange(
+                        max($subRange->low, $otherSubRange->low),
+                        min($subRange->high, $otherSubRange->high)
+                    ));
+                }
+            }
+        }
+
+        return $result;
     }
 }

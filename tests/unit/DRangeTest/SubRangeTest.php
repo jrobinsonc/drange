@@ -33,4 +33,114 @@ class SubRangeTest extends \Codeception\Test\Unit
         $this->assertEquals('5-9', $subRange);
         $this->assertEquals('1-10', $subRange2);
     }
+
+    public function testToStringSingleNumber()
+    {
+        $subRange = new SubRange(5, 5);
+        $this->assertEquals('5', (string)$subRange);
+    }
+
+    public function testAddTouches()
+    {
+        $subRange1 = new SubRange(1, 5);
+        $subRange2 = new SubRange(6, 10);
+
+        $added = $subRange1->add($subRange2);
+        $this->assertInstanceOf(SubRange::class, $added);
+        $this->assertEquals(1, $added->low);
+        $this->assertEquals(10, $added->high);
+
+        // Test commutative property (adding lower to higher)
+        $addedReverse = $subRange2->add($subRange1);
+        $this->assertInstanceOf(SubRange::class, $addedReverse);
+        $this->assertEquals(1, $addedReverse->low);
+        $this->assertEquals(10, $addedReverse->high);
+    }
+
+    public function testOverlapsPartialLeft()
+    {
+        $subRange1 = new SubRange(5, 10);
+        $subRange2 = new SubRange(1, 7);
+        $this->assertTrue($subRange1->overlaps($subRange2));
+    }
+
+    public function testOverlapsPartialRight()
+    {
+        $subRange1 = new SubRange(5, 10);
+        $subRange2 = new SubRange(8, 15);
+        $this->assertTrue($subRange1->overlaps($subRange2));
+    }
+
+    public function testOverlapsFullyInside()
+    {
+        $subRange1 = new SubRange(5, 10);
+        $subRange2 = new SubRange(6, 9);
+        $this->assertTrue($subRange1->overlaps($subRange2));
+    }
+
+    public function testOverlapsFullyEncloses()
+    {
+        $subRange1 = new SubRange(5, 10);
+        $subRange2 = new SubRange(1, 15);
+        $this->assertTrue($subRange1->overlaps($subRange2));
+    }
+
+    public function testOverlapsExactBounds()
+    {
+        $subRange1 = new SubRange(5, 10);
+
+        $subRangeLeft = new SubRange(1, 5);
+        $this->assertTrue($subRange1->overlaps($subRangeLeft));
+
+        $subRangeRight = new SubRange(10, 15);
+        $this->assertTrue($subRange1->overlaps($subRangeRight));
+    }
+
+    public function testOverlapsNoOverlapLeft()
+    {
+        $subRange1 = new SubRange(5, 10);
+        $subRange2 = new SubRange(1, 4);
+        $this->assertFalse($subRange1->overlaps($subRange2));
+    }
+
+    public function testOverlapsNoOverlapRight()
+    {
+        $subRange1 = new SubRange(5, 10);
+        $subRange2 = new SubRange(11, 15);
+        $this->assertFalse($subRange1->overlaps($subRange2));
+    }
+
+    public function testAddDoesNotTouch()
+    {
+        $subRange1 = new SubRange(1, 5);
+        $subRange2 = new SubRange(7, 10);
+        $this->assertNull($subRange1->add($subRange2));
+    }
+
+    public function testSubtractDoesNotOverlap()
+    {
+        $subRange1 = new SubRange(1, 5);
+        $subRange2 = new SubRange(7, 10);
+        $this->assertNull($subRange1->subtract($subRange2));
+    }
+
+    public function testTouches()
+    {
+        $range1 = new SubRange(5, 10);
+
+        // Disjoint (does not touch)
+        $this->assertFalse($range1->touches(new SubRange(1, 3)));
+        $this->assertFalse($range1->touches(new SubRange(12, 15)));
+
+        // Adjacent (touches)
+        $this->assertTrue($range1->touches(new SubRange(1, 4)));
+        $this->assertTrue($range1->touches(new SubRange(11, 15)));
+
+        // Overlapping (touches)
+        $this->assertTrue($range1->touches(new SubRange(1, 6)));
+        $this->assertTrue($range1->touches(new SubRange(8, 12)));
+        $this->assertTrue($range1->touches(new SubRange(6, 8)));
+        $this->assertTrue($range1->touches(new SubRange(1, 15)));
+        $this->assertTrue($range1->touches(new SubRange(5, 10)));
+    }
 }
