@@ -21,13 +21,6 @@ class DRange implements \Countable
         return '[ ' . implode(', ', $this->ranges) . ' ]';
     }
 
-    public function __clone(): void
-    {
-        foreach ($this->ranges as $key => $range) {
-            $this->ranges[$key] = clone $range;
-        }
-    }
-
     public function count(): int
     {
         return $this->length;
@@ -42,8 +35,6 @@ class DRange implements \Countable
 
     protected function addSubRange($subRange)
     {
-        // Copy so the stored range never aliases an object owned by the caller.
-        $subRange = clone $subRange;
         $newRanges = [];
         $num = 0;
         $rangesCount = count($this->ranges);

@@ -3,7 +3,7 @@ namespace jrdev\DRange;
 
 use UnexpectedValueException;
 
-class SubRange
+readonly class SubRange
 {
     public int $low;
     public int $high;
@@ -11,13 +11,13 @@ class SubRange
 
     public function __construct(int $low, int $high)
     {
+        if ($low > $high) {
+            throw new UnexpectedValueException("This range is not acceptable: {$low} - {$high}");
+        }
+
         $this->low = $low;
         $this->high = $high;
         $this->length = 1 + $this->high - $this->low;
-
-        if ($this->low > $this->high) {
-            throw new UnexpectedValueException("This range is not acceptable: {$this->low} - {$this->high}");
-        }
     }
 
     public function __toString(): string
