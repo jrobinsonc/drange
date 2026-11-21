@@ -142,6 +142,16 @@ class DRangeTest extends \Codeception\Test\Unit
         $this->assertEquals('[ 0-4, 6-9 ]', $drange2);
     }
 
+    public function testCloneAddLeavesOriginalUnchanged()
+    {
+        $drange = new DRange(0, 9);
+        $drange2 = clone($drange);
+
+        $drange2->add(10, 15);
+        $this->assertEquals('[ 0-9 ]', $drange);
+        $this->assertEquals('[ 0-15 ]', $drange2);
+    }
+
     public function testEmptyDRange()
     {
         $drange = new DRange();
@@ -214,36 +224,33 @@ class DRangeTest extends \Codeception\Test\Unit
         $this->assertEquals(1, count($result2));
     }
 
-    public function testCloneDoesNotShareSubRanges()
+    public function testCloneSubRangeCannotBeMutated()
     {
         $drange = new DRange(1, 3);
         $drange2 = clone($drange);
 
-        $this->storedRanges($drange)[0]->low = 2;
-
-        $this->assertEquals('[ 2-3 ]', $drange);
-        $this->assertEquals('[ 1-3 ]', $drange2);
+        $this->expectException(\Error::class);
+        $this->storedRanges($drange2)[0]->low = 2;
     }
 
-    public function testAddDoesNotAliasCallerSubRange()
+    public function testAddedCallerSubRangeCannotBeMutated()
     {
         $subRange = new SubRange(1, 3);
         $drange = new DRange();
         $drange->add($subRange);
 
+        $this->expectException(\Error::class);
         $subRange->low = 2;
-        $this->assertEquals('[ 1-3 ]', $drange);
     }
 
-    public function testAddDoesNotAliasOtherDRangeSubRanges()
+    public function testAddedOtherDRangeSubRangeCannotBeMutated()
     {
         $source = new DRange(1, 3);
         $target = new DRange();
         $target->add($source);
 
-        $this->storedRanges($source)[0]->low = 2;
-        $this->assertEquals('[ 2-3 ]', $source);
-        $this->assertEquals('[ 1-3 ]', $target);
+        $this->expectException(\Error::class);
+        $this->storedRanges($target)[0]->low = 2;
     }
 
     private function storedRanges(DRange $drange): array
