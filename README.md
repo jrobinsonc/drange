@@ -12,11 +12,12 @@ DRange is a PHP library for managing **discontinuous (non-contiguous) ranges of 
 - Add, subtract, or intersect individual integers, numeric ranges, `SubRange` instances, or entire `DRange` objects
 - Automatic merging of adjacent and overlapping ranges on `add()`
 - Automatic splitting of ranges on `subtract()`
-- Random-access by logical index (`->index($n)`) across all sub-ranges
+- Look up the value at a position (`->index($position)`) or the position of a value (`->indexOf($value)`), both by binary search
+- Linear-time `add()`, `subtract()` and `intersect()`, however many sub-ranges are involved
 - Native PHP `count()` support via `Countable`
 - Human-readable string representation (e.g. `[ 1-5, 8-10 ]`)
 - Chainable `add()` and `subtract()` calls
-- Full clone support — deep copy, mutations on the clone do not affect the original
+- Immutable `SubRange` values, so a cloned `DRange` never shares changes with the original
 - Zero runtime dependencies
 
 ## Requirements
@@ -68,34 +69,36 @@ echo count($drange);    // 5
 | `->intersect($low, $high)` | `DRange` | Intersection with a contiguous range |
 | `->intersect($drange)` | `DRange` | Intersection with another `DRange` |
 | `->intersect($subrange)` | `DRange` | Intersection with a `SubRange` instance |
-| `->index($i)` | `int\|null` | Value at logical position `$i` (0-based); `null` if out of bounds |
-| `count($drange)` | `int` | Total number of integers across all sub-ranges |
+| `->index($position)` | `int\|null` | Value at the 0-based `$position`; `null` if out of bounds |
+| `->indexOf($value)` | `int\|null` | 0-based position of `$value`; `null` if the value is not in the range |
+| `count($drange)` | `int` | Total number of values across all sub-ranges (`0` when empty) |
 | `(string) $drange` | `string` | e.g. `"[ 1-5, 8-10 ]"` |
-| `clone $drange` | `DRange` | Deep copy; mutations do not affect the original |
+| `clone $drange` | `DRange` | Independent copy; changes to the clone do not affect the original |
 
 Adjacent ranges (touching but not overlapping) are merged automatically on every `add()` call.
 
 ### `SubRange` (`jrdev\DRange\SubRange`)
 
+`SubRange` is a `readonly` class: its properties are set once by the constructor, and assigning to them afterwards throws an `\Error`. Methods that change a range return new `SubRange` objects.
+
 | Member | Type | Description |
 |---|---|---|
-| `new SubRange($low, $high)` | — | Throws `\UnexpectedValueException` if `$low > $high` |
+| `new SubRange(int $low, int $high)` | — | Throws `\UnexpectedValueException` if `$low > $high`, and `\TypeError` for non-integer bounds |
 | `->low` | `int` | Lower bound (inclusive) |
 | `->high` | `int` | Upper bound (inclusive) |
 | `->length` | `int` | `$high - $low + 1` |
-| `->overlaps($range)` | `bool` | `true` if the two ranges share at least one integer |
+| `->overlaps($range)` | `bool` | `true` if the two ranges share at least one value |
 | `->touches($range)` | `bool` | `true` if the ranges overlap or are adjacent (no gap between them) |
-| `->add($range)` | `SubRange` | Merged range — only meaningful when `touches()` is `true` |
-| `->subtract($range)` | `SubRange[]` | Returns 0, 1, or 2 sub-ranges after removing the overlap |
-| `(string) $subrange` | `string` | `"low-high"` or just `"n"` for a single-number range |
-| `clone $subrange` | `SubRange` | Deep copy |
+| `->add($range)` | `SubRange\|null` | Merged range; `null` if the ranges do not touch |
+| `->subtract($range)` | `SubRange[]\|null` | 0, 1, or 2 sub-ranges left after removing the overlap; `null` if the ranges do not overlap |
+| `(string) $subrange` | `string` | `"low-high"` or just `"n"` for a single-value range |
 
 ## Usage Examples
 
 ### Method chaining
 
 ```php
-$drange = new DRange(1, 10)
+$drange = (new DRange(1, 10))
     ->subtract(5)
     ->subtract(7);
 // [ 1-4, 6, 8-10 ]
@@ -104,33 +107,37 @@ $drange = new DRange(1, 10)
 ### Operating on two DRange objects
 
 ```php
-$allowed = new DRange(1, 1023);
+$allowed = new DRange(1, 65535);
 
 $blocked = new DRange(22);
 $blocked->add(23)->add(3306)->add(5432);
 
 $available = clone $allowed;
 $available->subtract($blocked);
-// [ 1-21, 24-3305, 3307-5431, 5433-1023 ]
+// [ 1-21, 24-3305, 3307-5431, 5433-65535 ]
+// $allowed is still [ 1-65535 ]
 ```
 
-### Random access with `index()`
+### Positions and values with `index()` and `indexOf()`
 
 ```php
-$drange = new DRange(0, 9);   // 10 elements: 0–9
-$drange->add(20, 29);          // 10 more:      20–29
-$drange->add(40, 49);          // 10 more:      40–49
+$drange = new DRange(0, 9);   // 10 values: 0–9
+$drange->add(20, 29);          // 10 more:    20–29
+$drange->add(40, 49);          // 10 more:    40–49
 
-$drange->index(0);   // 0   (1st element)
-$drange->index(15);  // 25  (16th element, 6th in second sub-range)
-$drange->index(25);  // 45  (26th element, 6th in third sub-range)
+$drange->index(0);   // 0   (1st value)
+$drange->index(15);  // 25  (16th value, 6th in second sub-range)
+$drange->index(25);  // 45  (26th value, 6th in third sub-range)
 $drange->index(55);  // null (out of bounds)
+
+$drange->indexOf(25);  // 15   (the inverse of index())
+$drange->indexOf(15);  // null (15 falls in the gap 10–19)
 ```
 
 ### Counting with native `count()`
 
 ```php
-$drange = new DRange(1, 5);   // 5 elements
+$drange = new DRange(1, 5);   // 5 values
 $drange->add(10, 15);          // 6 more
 
 count($drange); // 11
