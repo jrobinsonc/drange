@@ -2,6 +2,7 @@
 namespace jrdev;
 
 use jrdev\DRange\SubRange;
+use ReflectionProperty;
 
 class DRangeTest extends \Codeception\Test\Unit
 {
@@ -211,5 +212,42 @@ class DRangeTest extends \Codeception\Test\Unit
         $result2 = $drange->intersect(4);
         $this->assertEquals('[ 4 ]', $result2);
         $this->assertEquals(1, count($result2));
+    }
+
+    public function testCloneDoesNotShareSubRanges()
+    {
+        $drange = new DRange(1, 3);
+        $drange2 = clone($drange);
+
+        $this->storedRanges($drange)[0]->low = 2;
+
+        $this->assertEquals('[ 2-3 ]', $drange);
+        $this->assertEquals('[ 1-3 ]', $drange2);
+    }
+
+    public function testAddDoesNotAliasCallerSubRange()
+    {
+        $subRange = new SubRange(1, 3);
+        $drange = new DRange();
+        $drange->add($subRange);
+
+        $subRange->low = 2;
+        $this->assertEquals('[ 1-3 ]', $drange);
+    }
+
+    public function testAddDoesNotAliasOtherDRangeSubRanges()
+    {
+        $source = new DRange(1, 3);
+        $target = new DRange();
+        $target->add($source);
+
+        $this->storedRanges($source)[0]->low = 2;
+        $this->assertEquals('[ 2-3 ]', $source);
+        $this->assertEquals('[ 1-3 ]', $target);
+    }
+
+    private function storedRanges(DRange $drange): array
+    {
+        return (new ReflectionProperty(DRange::class, 'ranges'))->getValue($drange);
     }
 }
