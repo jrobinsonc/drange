@@ -22,6 +22,27 @@ class SubRangeTest extends \Codeception\Test\Unit
         new SubRange(7, 5);
     }
 
+    public function testCannotMutateLow()
+    {
+        $subRange = new SubRange(5, 7);
+        $this->expectException(\Error::class);
+        $subRange->low = 1;
+    }
+
+    public function testCannotMutateHigh()
+    {
+        $subRange = new SubRange(5, 7);
+        $this->expectException(\Error::class);
+        $subRange->high = 10;
+    }
+
+    public function testCannotMutateLength()
+    {
+        $subRange = new SubRange(5, 7);
+        $this->expectException(\Error::class);
+        $subRange->length = 10;
+    }
+
     public function testClone()
     {
         $subRange = new SubRange(5, 7);
